@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Manager</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input {
+            width: 70%;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #eee;
+            margin-top: 10px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 5px;
+        }
+
+        .delete-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Task Manager</h1>
+
+        <input type="text" id="taskInput" placeholder="Yeni görev yaz..." />
+        <button onclick="addTask()">Ekle</button>
+
+        <ul id="taskList"></ul>
+        <button id="prevBtn" onclick="prevPage()">Önceki</button>
+        <button id="nextBtn" onclick="nextPage()">Sonraki</button>
+    </div>
+
+    <script>
+
+        let currentPage = 1;
+        let pageSize = 5;
+        let totalCount = 0;
+        const apiUrl = "https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Task";
+
+        // SAYFA YÜKLENİNCE
+        window.onload = function () {
+            getTasks();
+        };
+
+        // TASK LİSTELE
+        async function getTasks() {
+            const list = document.getElementById("taskList");
+            list.innerHTML = "Yükleniyor...";
+
+            try {
+                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}`);
+
+                if (!res.ok) {
+                    throw new Error("API hata verdi"); // 👈 KRİTİK
+                }
+
+                const result = await res.json();
+                const data = result.data;
+                totalCount = result.totalCount;
+
+                list.innerHTML = ""; // 👈 önce temizle
+
+                data.forEach(task => {
+                    const li = document.createElement("li");
+
+                    li.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                        <input type="checkbox" ${task.isDone ? "checked" : ""} />
+
+                        <span style="
+                            ${task.isDone ? 'text-decoration: line-through;' : ''}
+                            word-break: break-word;
+                            flex: 1;
+                        ">
+                            ${task.title}
+                        </span>
+                    </div>
+
+                    <button class="delete-btn">Sil</button>
+                </div>
+            `;
+
+                    const checkbox = li.querySelector("input");
+                    checkbox.addEventListener("change", () => {
+                        toggleTask(task);
+                    });
+
+                    const deleteBtn = li.querySelector(".delete-btn");
+                    deleteBtn.addEventListener("click", () => {
+                        deleteTask(task.id);
+                    });
+
+                    list.appendChild(li);
+                });
+
+                const totalPages = Math.ceil(totalCount / pageSize);
+
+                document.getElementById("prevBtn").disabled = currentPage === 1;
+                document.getElementById("nextBtn").disabled = currentPage === totalPages;
+
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = "Hata oluştu"; // 👈 UI fix
+            }
+        }
+
+        // TASK EKLE
+        async function addTask() {
+            const input = document.getElementById("taskInput");
+
+            const task = {
+                title: input.value,
+                isDone: false
+            };
+
+            await fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(task)
+            });
+
+            input.value = "";
+            getTasks();
+        }
+
+        // TASK SİL
+        async function deleteTask(id) {
+            await fetch(`${apiUrl}/${id}`, {
+                method: "DELETE"
+            });
+
+            getTasks();
+        }
+
+        async function toggleTask(task) {
+
+            await fetch(`${apiUrl}/${task.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: task.id,
+                    title: task.title,
+                    isDone: !task.isDone
+                })
+            });
+
+            getTasks();
+        }
+        function nextPage() {
+            const totalPages = Math.ceil(totalCount / pageSize);
+
+            if (currentPage < totalPages) {
+                currentPage++;
+                getTasks();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                getTasks();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", getTasks);
+
+    </script>
+
+</body>
+</html>

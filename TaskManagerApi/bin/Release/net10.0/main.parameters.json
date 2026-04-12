@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appServicePlanName": {
+      "value": "your-existing-plan-name"
+    },
+    "appServicePlanResourceGroup": {
+      "value": "your-existing-plan-resource-group"
+    },
+    "webAppName": {
+      "value": "taskmanagerapi"
+    },
+    "location": {
+      "value": "westeurope"
+    }
+  }
+}

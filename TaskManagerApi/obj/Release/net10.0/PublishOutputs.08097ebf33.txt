@@ -1,0 +1,13 @@
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\TaskManagerApi.exe
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\appsettings.Development.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\appsettings.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\dotnet-tools.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\main.parameters.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\TaskManagerApi.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\TaskManagerApi.deps.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\TaskManagerApi.runtimeconfig.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\TaskManagerApi.pdb
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\Microsoft.OpenApi.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\Swashbuckle.AspNetCore.Swagger.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net10.0\PubTmp\Out\Swashbuckle.AspNetCore.SwaggerUI.dll
