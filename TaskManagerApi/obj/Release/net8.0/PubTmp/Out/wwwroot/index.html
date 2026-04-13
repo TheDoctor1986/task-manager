@@ -17,7 +17,9 @@
             background: white;
             padding: 30px;
             border-radius: 10px;
-            width: 350px;
+            max-width: 800px;
+            width: 100%;
+            margin: auto;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
@@ -45,8 +47,8 @@
             background: #eee;
             margin-top: 10px;
             padding: 10px;
-            display: flex;
-            justify-content: space-between;
+            /*display: flex;
+            justify-content: space-between;*/
             border-radius: 5px;
         }
 
@@ -106,22 +108,27 @@
                     const li = document.createElement("li");
 
                     li.innerHTML = `
-                <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-                    <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
-                        <input type="checkbox" ${task.isDone ? "checked" : ""} />
+                        <div style="display:flex; align-items:flex-start; gap:10px; width:100%;">
 
-                        <span style="
-                            ${task.isDone ? 'text-decoration: line-through;' : ''}
-                            word-break: break-word;
-                            flex: 1;
-                        ">
-                            ${task.title}
-                        </span>
-                    </div>
+                          <input type="checkbox" ${task.isDone ? "checked" : ""} 
+                                 style="width:16px; height:16px; flex:0 0 auto; margin-top:4px;" />
 
-                    <button class="delete-btn">Sil</button>
-                </div>
-            `;
+                          <span style="
+                              ${task.isDone ? 'text-decoration: line-through;' : ''}
+                              flex: 1 1 auto;
+                              min-width: 0;
+                              display: block;
+                              white-space: normal;
+                              overflow-wrap: break-word;   /* 🔥 anahtar */
+                              word-break: normal;          /* 🔥 harf harf parçalama yok */
+                          ">
+                              ${task.title}
+                          </span>
+
+                          <button class="delete-btn" style="flex:0 0 auto;">Sil</button>
+
+                        </div>
+                        `;
 
                     const checkbox = li.querySelector("input");
                     checkbox.addEventListener("change", () => {
