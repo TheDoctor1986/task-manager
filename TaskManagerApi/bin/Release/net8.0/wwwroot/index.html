@@ -137,23 +137,83 @@
                           <input type="checkbox" ${task.isDone ? "checked" : ""} 
                                  style="width:16px; height:16px; flex:0 0 auto; margin-top:4px;" />
 
-                          <span style="
-                              ${task.isDone ? 'text-decoration: line-through;' : ''}
-                              flex: 1 1 auto;
-                              min-width: 0;
-                              display: block;
-                              white-space: normal;
-                              overflow-wrap: break-word;   /* 🔥 anahtar */
-                              word-break: normal;          /* 🔥 harf harf parçalama yok */
-                          ">
-                              ${task.title}
-                          </span>
+                            <span class="task-text" style="
+                                ${task.isDone ? 'text-decoration: line-through;' : ''}
+                                flex: 1 1 auto;
+                                min-width: 0;
+                                display: block;
+                                white-space: normal;
+                                overflow-wrap: break-word;
+                                word-break: normal;
+                            ">
+                                ${task.title}
+                            </span>
+
+                            <input class="edit-input" type="text" value="${task.title}" 
+                                   style="
+                                       display:none;
+                                       flex:1 1 auto;
+                                       min-width:0;
+                                   " />
 
                             <button class="edit-btn">Düzenle</button>
                             <button class="delete-btn">Sil</button>
 
+                            <button class="save-btn" style="display:none;">Kaydet</button>
+                            <button class="cancel-btn" style="display:none;">İptal</button>
+
                         </div>
                         `;
+                    const textSpan = li.querySelector(".task-text");
+                    const editInput = li.querySelector(".edit-input");
+
+                    const editBtn = li.querySelector(".edit-btn");
+                    const saveBtn = li.querySelector(".save-btn");
+                    const cancelBtn = li.querySelector(".cancel-btn");
+
+                    editBtn.addEventListener("click", () => {
+                        textSpan.style.display = "none";
+                        editInput.style.display = "block";
+
+                        editBtn.style.display = "none";
+                        saveBtn.style.display = "inline-block";
+                        cancelBtn.style.display = "inline-block";
+
+                        editInput.focus();
+                    });
+
+                    saveBtn.addEventListener("click", async () => {
+                        const newTitle = editInput.value.trim();
+
+                        if (!newTitle) return;
+
+                        await fetch(`${apiUrl}/${task.id}`, {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: task.id,
+                                title: newTitle,
+                                isDone: task.isDone
+                            })
+                        });
+
+                        getTasks(); // 👈 EN KRİTİK
+                    });
+
+                    cancelBtn.addEventListener("click", () => {
+                        // input'u eski haline getir
+                        editInput.value = task.title;
+
+                        // görünümü geri al
+                        textSpan.style.display = "block";
+                        editInput.style.display = "none";
+
+                        editBtn.style.display = "inline-block";
+                        saveBtn.style.display = "none";
+                        cancelBtn.style.display = "none";
+                    });
 
                     const checkbox = li.querySelector("input");
                     checkbox.addEventListener("change", () => {
@@ -163,11 +223,6 @@
                     const deleteBtn = li.querySelector(".delete-btn");
                     deleteBtn.addEventListener("click", () => {
                         deleteTask(task.id);
-                    });
-
-                    const editBtn = li.querySelector(".edit-btn");
-                    editBtn.addEventListener("click", () => {
-                        editTask(task);
                     });
 
                     list.appendChild(li);
@@ -244,29 +299,6 @@
                 currentPage--;
                 getTasks();
             }
-        }
-
-        // TASK GÜNCELLE
-        async function editTask(task) {
-            const newTitle = prompt("Yeni görev başlığı:", task.title);
-
-            if (!newTitle) return;
-
-            if (newTitle.trim() === "") return;
-
-            await fetch(`${apiUrl}/${task.id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    id: task.id,
-                    title: newTitle,
-                    isDone: task.isDone
-                })
-            });
-
-            getTasks();
         }
 
         document.addEventListener("DOMContentLoaded", getTasks);
