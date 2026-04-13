@@ -7,20 +7,17 @@
         body {
             font-family: Arial;
             background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 40px 10px;
         }
 
         .container {
             background: white;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 14px;
             max-width: 800px;
             width: 100%;
             margin: auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
         }
 
         h1 {
@@ -33,9 +30,16 @@
         }
 
         button {
-            padding: 10px;
-            margin-left: 5px;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+
+        button:hover {
+            transform: scale(1.05);
         }
 
         ul {
@@ -44,16 +48,19 @@
         }
 
         li {
-            background: #eee;
-            margin-top: 10px;
-            padding: 10px;
-            /*display: flex;
-            justify-content: space-between;*/
-            border-radius: 5px;
+            background: #ffffff;
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        li:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         }
 
         .delete-btn {
-            background: red;
+            background: #ff4d4f;
             color: white;
             border: none;
             padding: 5px 10px;
@@ -66,9 +73,30 @@
             padding: 5px 10px;
         }
 
+        .save-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+
         .edit-btn,
         .delete-btn {
             flex: 0 0 auto;
+        }
+
+        .save-btn,
+        .cancel-btn {
+            display: none;
+        }
+
+        .action-buttons {
+            margin-left: auto;
+            display: flex;
+            gap: 6px;
         }
     </style>
 </head>
@@ -132,35 +160,39 @@
                     const li = document.createElement("li");
 
                     li.innerHTML = `
-                        <div style="display:flex; align-items:flex-start; gap:10px; width:100%;">
+                        <div style="display:flex; align-items:center; gap:10px; width:100%;">
 
-                          <input type="checkbox" ${task.isDone ? "checked" : ""} 
-                                 style="width:16px; height:16px; flex:0 0 auto; margin-top:4px;" />
+                            <input type="checkbox"
+                                        ${task.isDone ? "checked" : ""} 
+                                        style="flex:0 0 auto; width:16px; height:16px;" />
+
 
                             <span class="task-text" style="
-                                ${task.isDone ? 'text-decoration: line-through;' : ''}
-                                flex: 1 1 auto;
-                                min-width: 0;
-                                display: block;
-                                white-space: normal;
-                                overflow-wrap: break-word;
-                                word-break: normal;
-                            ">
+                                            ${task.isDone ? 'text-decoration: line-through;' : ''}
+                                            flex: 1 1 auto;
+                                            min-width: 0;
+                                            display: block;
+                                            text-align: left;
+                                            white-space: normal;
+                                            overflow-wrap: break-word;
+                                            word-break: normal;
+                                        ">
                                 ${task.title}
                             </span>
 
                             <input class="edit-input" type="text" value="${task.title}" 
-                                   style="
-                                       display:none;
-                                       flex:1 1 auto;
-                                       min-width:0;
-                                   " />
+                                           style="
+                                               display:none;
+                                               flex:1 1 auto;
+                                               min-width:0;
+                                           " />
+                            <div class="action-buttons">
+                                <button class="edit-btn">✏️</button>
+                                <button class="delete-btn">🗑️</button>
 
-                            <button class="edit-btn">Düzenle</button>
-                            <button class="delete-btn">Sil</button>
-
-                            <button class="save-btn" style="display:none;">Kaydet</button>
-                            <button class="cancel-btn" style="display:none;">İptal</button>
+                                <button class="save-btn">💾</button>
+                                <button class="cancel-btn">❌</button>
+                            </div>
 
                         </div>
                         `;
