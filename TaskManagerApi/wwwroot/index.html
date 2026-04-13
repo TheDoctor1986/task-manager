@@ -58,6 +58,18 @@
             border: none;
             padding: 5px 10px;
         }
+
+        .edit-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            flex: 0 0 auto;
+        }
     </style>
 </head>
 
@@ -137,7 +149,8 @@
                               ${task.title}
                           </span>
 
-                          <button class="delete-btn" style="flex:0 0 auto;">Sil</button>
+                            <button class="edit-btn">Düzenle</button>
+                            <button class="delete-btn">Sil</button>
 
                         </div>
                         `;
@@ -150,6 +163,11 @@
                     const deleteBtn = li.querySelector(".delete-btn");
                     deleteBtn.addEventListener("click", () => {
                         deleteTask(task.id);
+                    });
+
+                    const editBtn = li.querySelector(".edit-btn");
+                    editBtn.addEventListener("click", () => {
+                        editTask(task);
                     });
 
                     list.appendChild(li);
@@ -226,6 +244,29 @@
                 currentPage--;
                 getTasks();
             }
+        }
+
+        // TASK GÜNCELLE
+        async function editTask(task) {
+            const newTitle = prompt("Yeni görev başlığı:", task.title);
+
+            if (!newTitle) return;
+
+            if (newTitle.trim() === "") return;
+
+            await fetch(`${apiUrl}/${task.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: task.id,
+                    title: newTitle,
+                    isDone: task.isDone
+                })
+            });
+
+            getTasks();
         }
 
         document.addEventListener("DOMContentLoaded", getTasks);
