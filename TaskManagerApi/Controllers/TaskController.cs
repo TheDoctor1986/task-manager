@@ -39,43 +39,22 @@ namespace TaskManagerApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(CreateTaskDto dto)
         {
-            try
-            {
-                var result = await _taskService.AddAsync(dto);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _taskService.AddAsync(dto);
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _taskService.DeleteAsync(id);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _taskService.DeleteAsync(id);
+            return Ok();
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
         {
-            try
-            {
-                await _taskService.UpdateAsync(id, dto);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _taskService.UpdateAsync(id, dto);
+            return Ok();
         }
     }
 }

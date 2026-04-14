@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using TaskManagerApi.Middleware;
 using TaskManagerApi.Repositories;
 using TaskManagerApi.Services;
 
@@ -22,21 +23,7 @@ builder.Services.AddFluentValidationAutoValidation();
 
 var app = builder.Build();
 
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
-
-        await context.Response.WriteAsync(
-            System.Text.Json.JsonSerializer.Serialize(new
-            {
-                message = "Bir hata oluştu"
-            })
-        );
-    });
-});
+app.UseMiddleware<ExceptionMiddleware>();
 
 // 🔴 FRONTEND için
 app.UseDefaultFiles();
@@ -51,6 +38,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
     c.RoutePrefix = "swagger";
 });
+
 
 app.UseAuthorization();
 app.MapControllers();

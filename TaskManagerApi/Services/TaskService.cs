@@ -73,7 +73,7 @@ namespace TaskManagerApi.Services
             var task = await _repository.GetByIdAsync(id);
 
             if (task == null)
-                throw new Exception("Task bulunamadı");
+                throw new KeyNotFoundException("Task bulunamadı");
 
             // mapping
             _mapper.Map(dto, task);
