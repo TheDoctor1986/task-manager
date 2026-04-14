@@ -21,21 +21,32 @@ namespace TaskManagerApi.Controllers
         }
 
 
- 
-        [HttpGet]
-        public async Task<IActionResult> Get(int page = 1, int pageSize = 5)
-        {
-            var totalCount = await _context.Tasks.CountAsync(); // 👈 EKLENDİ
 
-            var tasks = await _context.Tasks
+        [HttpGet]
+        public async Task<IActionResult> Get(int page = 1, int pageSize = 5, string filter = "all")
+        {
+            var query = _context.Tasks.AsQueryable();
+
+            // FILTER
+            if (filter == "active")
+                query = query.Where(t => !t.IsDone);
+            else if (filter == "completed")
+                query = query.Where(t => t.IsDone);
+
+            // COUNT 
+            var totalCount = await query.CountAsync();
+
+            // DATA (pagination)
+            var tasks = await query
                 .OrderBy(t => t.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
+            // DTO MAPPING
             var result = _mapper.Map<List<TaskDto>>(tasks);
 
-            return Ok(new   // 👈 BURASI DEĞİŞTİ
+            return Ok(new
             {
                 totalCount,
                 page,

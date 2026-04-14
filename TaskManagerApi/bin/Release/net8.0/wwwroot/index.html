@@ -98,6 +98,26 @@
             display: flex;
             gap: 6px;
         }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0 15px 0;
+        }
+
+        .filters button {
+            background: #eee;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .filters button:hover {
+            background: #ddd;
+        }
+
+        .filters button.active {
+            background: #007bff;
+            color: white;
+        }
     </style>
 </head>
 
@@ -110,7 +130,11 @@
         <button onclick="addTask()">Ekle</button>
 
         <input type="text" id="searchInput" placeholder="Görev ara..." style="width:100%; margin-top:10px;" />
-
+        <div class="filters">
+            <button id="filter-all" onclick="setFilter('all')">Tümü</button>
+            <button id="filter-active" onclick="setFilter('active')">Aktif</button>
+            <button id="filter-completed" onclick="setFilter('completed')">Tamamlanan</button>
+        </div>
         <ul id="taskList"></ul>
         <button id="prevBtn" onclick="prevPage()">Önceki</button>
         <button id="nextBtn" onclick="nextPage()">Sonraki</button>
@@ -122,41 +146,49 @@
         let pageSize = 5;
         let totalCount = 0;
         let searchText = "";
+        let currentFilter = "all";
         const apiUrl = "https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Task";
 
-        // SAYFA YÜKLENİNCE
         window.onload = function () {
             getTasks();
         };
 
-        // TASK LİSTELE
+        // List TASKS
         async function getTasks() {
             const list = document.getElementById("taskList");
             list.innerHTML = "Yükleniyor...";
 
             try {
-                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}`);
+                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=5&filter=${currentFilter}`);
 
                 if (!res.ok) {
-                    throw new Error("API hata verdi"); // 👈 KRİTİK
+                    throw new Error("API hata verdi"); 
                 }
 
                 const result = await res.json();
                 const data = result.data;
                 totalCount = result.totalCount;
 
-                list.innerHTML = ""; // 👈 önce temizle
+                list.innerHTML = ""; 
+                let filteredTasks = data;
 
-                const filtered = data.filter(task =>
+                filteredTasks = filteredTasks.filter(task =>
                     task.title.toLowerCase().includes(searchText)
                 );
 
-                // 👇 BURAYA EKLİYORSUN
-                if (filtered.length === 0) {
+                if (currentFilter === "active") {
+                    filteredTasks = filteredTasks.filter(t => !t.isDone);
+                } else if (currentFilter === "completed") {
+                    filteredTasks = filteredTasks.filter(t => t.isDone);
+                }
+
+                
+                if (filteredTasks.length === 0) {
                     list.innerHTML = "Sonuç bulunamadı";
                     return;
                 }
-                filtered.forEach(task => {
+
+                filteredTasks.forEach(task => {
                     const li = document.createElement("li");
 
                     li.innerHTML = `
@@ -231,14 +263,12 @@
                             })
                         });
 
-                        getTasks(); // 👈 EN KRİTİK
+                        getTasks(); //Refresh Tasks
                     });
 
                     cancelBtn.addEventListener("click", () => {
-                        // input'u eski haline getir
                         editInput.value = task.title;
 
-                        // görünümü geri al
                         textSpan.style.display = "block";
                         editInput.style.display = "none";
 
@@ -267,11 +297,11 @@
 
             } catch (err) {
                 console.error(err);
-                list.innerHTML = "Hata oluştu"; // 👈 UI fix
+                list.innerHTML = "Hata oluştu"; 
             }
         }
 
-        // TASK EKLE
+        // ADD TASK
         async function addTask() {
             const input = document.getElementById("taskInput");
 
@@ -292,7 +322,7 @@
             getTasks();
         }
 
-        // TASK SİL
+        // DELETE TASK
         async function deleteTask(id) {
             await fetch(`${apiUrl}/${id}`, {
                 method: "DELETE"
@@ -333,11 +363,25 @@
             }
         }
 
+        function setFilter(filter) {
+            currentFilter = filter;
+
+            document.querySelectorAll(".filters button")
+                .forEach(btn => btn.classList.remove("active"));
+
+            document.getElementById("filter-" + filter)
+                .classList.add("active");
+
+            getTasks();
+        }
+
         document.addEventListener("DOMContentLoaded", getTasks);
         document.getElementById("searchInput").addEventListener("input", (e) => {
             searchText = e.target.value.toLowerCase();
             getTasks();
         });
+
+        setFilter("all");
 
     </script>
 
