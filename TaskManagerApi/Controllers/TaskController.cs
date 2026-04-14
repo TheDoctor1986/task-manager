@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using TaskManagerApi.Dtos;
 using TaskManagerApi.Models;
+using TaskManagerApi.Services;
 
 namespace TaskManagerApi.Controllers
 {
@@ -11,13 +12,11 @@ namespace TaskManagerApi.Controllers
     [Route("api/v1/[controller]")]
     public class TaskController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly ITaskService _taskService;
 
-        public TaskController(AppDbContext context, IMapper mapper)
+        public TaskController(ITaskService taskService)
         {
-            _context = context;
-            _mapper = mapper;
+            _taskService = taskService;
         }
 
 
@@ -25,40 +24,14 @@ namespace TaskManagerApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(int page = 1, int pageSize = 5, string filter = "all", string search = "")
         {
-            var query = _context.Tasks.AsQueryable();
-
-            //SEARCH
-            if (!string.IsNullOrEmpty(search))
-            {
-                var lowerSearch = search.ToLower();
-                query = query.Where(t => t.Title.ToLower().Contains(lowerSearch));
-            }
-
-            // FILTER
-            if (filter == "active")
-                query = query.Where(t => !t.IsDone);
-            else if (filter == "completed")
-                query = query.Where(t => t.IsDone);
-
-            // COUNT 
-            var totalCount = await query.CountAsync();
-
-            // DATA (pagination)
-            var tasks = await query
-                .OrderBy(t => t.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            // DTO MAPPING
-            var result = _mapper.Map<List<TaskDto>>(tasks);
+            var (data, totalCount) = await _taskService.GetAllAsync(page, pageSize, filter, search);
 
             return Ok(new
             {
                 totalCount,
                 page,
                 pageSize,
-                data = result
+                data
             });
         }
 
@@ -66,43 +39,43 @@ namespace TaskManagerApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(CreateTaskDto dto)
         {
-            var task = _mapper.Map<TaskItem>(dto);
-            task.IsDone = false;
-
-            _context.Tasks.Add(task);
-            await _context.SaveChangesAsync();
-
-            return Ok(task);
+            try
+            {
+                var result = await _taskService.AddAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _context.Tasks.FindAsync(id);
-            if (item == null) return NotFound();
-
-            _context.Tasks.Remove(item);
-            await _context.SaveChangesAsync();
-
-            return Ok();
+            try
+            {
+                await _taskService.DeleteAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
         {
-            if (id != dto.Id)
-                return BadRequest("Id uyuşmuyor");
-
-            var task = await _context.Tasks.FindAsync(id);
-
-            if (task == null)
-                return NotFound();
-
-            _mapper.Map(dto, task);
-
-            await _context.SaveChangesAsync();
-
-            return Ok(task);
+            try
+            {
+                await _taskService.UpdateAsync(id, dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

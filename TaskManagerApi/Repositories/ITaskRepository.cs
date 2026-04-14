@@ -9,5 +9,7 @@ namespace TaskManagerApi.Repositories
             Task DeleteAsync(int id);
             Task<TaskItem?> GetByIdAsync(int id);
             Task UpdateAsync(TaskItem task);
-        }
+
+            IQueryable<TaskItem> Query();
+    }
 }

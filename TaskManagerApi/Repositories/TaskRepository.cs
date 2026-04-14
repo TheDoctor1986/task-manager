@@ -44,5 +44,10 @@
             _context.Tasks.Update(task);
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<TaskItem> Query()
+        {
+            return _context.Tasks;
+        }
     }
 }

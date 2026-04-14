@@ -1,12 +1,13 @@
-﻿using TaskManagerApi.Models;
+﻿using TaskManagerApi.Dtos;
+using TaskManagerApi.Models;
 
 namespace TaskManagerApi.Services
 {
     public interface ITaskService
     {
-        Task<List<TaskItem>> GetAllAsync();
-        Task<TaskItem> AddAsync(TaskItem task);
+        Task<(List<TaskDto> Data, int TotalCount)> GetAllAsync(int page, int pageSize, string filter, string search);
+        Task<TaskItem> AddAsync(CreateTaskDto dto);
         Task DeleteAsync(int id);
-        Task UpdateAsync(int id, TaskItem updated);
+        Task UpdateAsync(int id, UpdateTaskDto dto);
     }
 }

@@ -129,7 +129,7 @@
         <input type="text" id="taskInput" placeholder="Yeni görev yaz..." />
         <button onclick="addTask()">Ekle</button>
 
-        <input type="text" id="searchInput" placeholder="Görev ara..." style="width:100%; margin-top:10px;" />
+        <input type="text" oninput="onSearchInput(this.value)" id="searchInput" placeholder="Görev ara..." style="width:100%; margin-top:10px;" />
         <div class="filters">
             <button id="filter-all" onclick="setFilter('all')">Tümü</button>
             <button id="filter-active" onclick="setFilter('active')">Aktif</button>
@@ -147,6 +147,7 @@
         let totalCount = 0;
         let searchText = "";
         let currentFilter = "all";
+        let debounceTimer;
         const apiUrl = "https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Task";
 
         window.onload = function () {
@@ -162,14 +163,14 @@
                 const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}&filter=${currentFilter}&search=${searchText}`);
 
                 if (!res.ok) {
-                    throw new Error("API hata verdi"); 
+                    throw new Error("API hata verdi");
                 }
 
                 const result = await res.json();
                 const data = result.data;
                 totalCount = result.totalCount;
 
-                list.innerHTML = ""; 
+                list.innerHTML = "";
                 let filteredTasks = data;
 
                 if (currentFilter === "active") {
@@ -178,7 +179,7 @@
                     filteredTasks = filteredTasks.filter(t => t.isDone);
                 }
 
-                
+
                 if (filteredTasks.length === 0) {
                     list.innerHTML = "Sonuç bulunamadı";
                     return;
@@ -188,42 +189,42 @@
                     const li = document.createElement("li");
 
                     li.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                            <div style="display:flex; align-items:center; gap:10px; width:100%;">
 
-                            <input type="checkbox"
-                                        ${task.isDone ? "checked" : ""} 
-                                        style="flex:0 0 auto; width:16px; height:16px;" />
+                                <input type="checkbox"
+                                            ${task.isDone ? "checked" : ""}
+                                            style="flex:0 0 auto; width:16px; height:16px;" />
 
 
-                            <span class="task-text" style="
-                                            ${task.isDone ? 'text-decoration: line-through;' : ''}
-                                            flex: 1 1 auto;
-                                            min-width: 0;
-                                            display: block;
-                                            text-align: left;
-                                            white-space: normal;
-                                            overflow-wrap: break-word;
-                                            word-break: normal;
-                                        ">
-                                ${task.title}
-                            </span>
+                                <span class="task-text" style="
+                                                ${task.isDone ? 'text-decoration: line-through;' : ''}
+                                                flex: 1 1 auto;
+                                                min-width: 0;
+                                                display: block;
+                                                text-align: left;
+                                                white-space: normal;
+                                                overflow-wrap: break-word;
+                                                word-break: normal;
+                                            ">
+                                    ${task.title}
+                                </span>
 
-                            <input class="edit-input" type="text" value="${task.title}" 
-                                           style="
-                                               display:none;
-                                               flex:1 1 auto;
-                                               min-width:0;
-                                           " />
-                            <div class="action-buttons">
-                                <button class="edit-btn">✏️</button>
-                                <button class="delete-btn">🗑️</button>
+                                <input class="edit-input" type="text" value="${task.title}"
+                                               style="
+                                                   display:none;
+                                                   flex:1 1 auto;
+                                                   min-width:0;
+                                               " />
+                                <div class="action-buttons">
+                                    <button class="edit-btn">✏️</button>
+                                    <button class="delete-btn">🗑️</button>
 
-                                <button class="save-btn">💾</button>
-                                <button class="cancel-btn">❌</button>
+                                    <button class="save-btn">💾</button>
+                                    <button class="cancel-btn">❌</button>
+                                </div>
+
                             </div>
-
-                        </div>
-                        `;
+                            `;
                     const textSpan = li.querySelector(".task-text");
                     const editInput = li.querySelector(".edit-input");
 
@@ -293,7 +294,7 @@
 
             } catch (err) {
                 console.error(err);
-                list.innerHTML = "Hata oluştu"; 
+                list.innerHTML = "Hata oluştu";
             }
         }
 
@@ -377,6 +378,19 @@
             searchText = e.target.value.toLowerCase();
             getTasks();
         });
+
+        //Debounce Search
+        function onSearchInput(value) {
+            if (value.length < 2) return;
+
+            clearTimeout(debounceTimer);
+
+            debounceTimer = setTimeout(() => {
+                searchText = value;
+                currentPage = 1;
+                getTasks();
+            }, 200);
+        }
 
         setFilter("all");
 
