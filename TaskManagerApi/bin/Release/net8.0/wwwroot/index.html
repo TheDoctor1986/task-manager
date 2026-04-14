@@ -159,7 +159,7 @@
             list.innerHTML = "Yükleniyor...";
 
             try {
-                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=5&filter=${currentFilter}`);
+                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}&filter=${currentFilter}&search=${searchText}`);
 
                 if (!res.ok) {
                     throw new Error("API hata verdi"); 
@@ -171,10 +171,6 @@
 
                 list.innerHTML = ""; 
                 let filteredTasks = data;
-
-                filteredTasks = filteredTasks.filter(task =>
-                    task.title.toLowerCase().includes(searchText)
-                );
 
                 if (currentFilter === "active") {
                     filteredTasks = filteredTasks.filter(t => !t.isDone);
@@ -363,6 +359,7 @@
             }
         }
 
+        //Filter Tasks
         function setFilter(filter) {
             currentFilter = filter;
 

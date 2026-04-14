@@ -23,9 +23,16 @@ namespace TaskManagerApi.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Get(int page = 1, int pageSize = 5, string filter = "all")
+        public async Task<IActionResult> Get(int page = 1, int pageSize = 5, string filter = "all", string search = "")
         {
             var query = _context.Tasks.AsQueryable();
+
+            //SEARCH
+            if (!string.IsNullOrEmpty(search))
+            {
+                var lowerSearch = search.ToLower();
+                query = query.Where(t => t.Title.ToLower().Contains(lowerSearch));
+            }
 
             // FILTER
             if (filter == "active")
