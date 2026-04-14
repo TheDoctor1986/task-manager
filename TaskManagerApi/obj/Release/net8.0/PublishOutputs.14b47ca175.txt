@@ -10,6 +10,9 @@ D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\AutoMa
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\Azure.Core.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\Azure.Identity.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\FluentValidation.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\FluentValidation.AspNetCore.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\FluentValidation.DependencyInjectionExtensions.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\Microsoft.Bcl.AsyncInterfaces.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\Microsoft.Data.SqlClient.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\PubTmp\Out\Microsoft.EntityFrameworkCore.dll

@@ -49,9 +49,6 @@ namespace TaskManagerApi.Services
 
         public async Task<TaskItem> AddAsync(CreateTaskDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                throw new ArgumentException("Görev başlığı boş olamaz");
-
             var task = _mapper.Map<TaskItem>(dto);
             task.IsDone = false;
 
@@ -77,9 +74,6 @@ namespace TaskManagerApi.Services
 
             if (task == null)
                 throw new Exception("Task bulunamadı");
-
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                throw new ArgumentException("Görev başlığı boş olamaz");
 
             // mapping
             _mapper.Map(dto, task);

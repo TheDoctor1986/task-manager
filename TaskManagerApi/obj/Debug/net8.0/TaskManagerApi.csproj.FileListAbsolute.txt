@@ -145,3 +145,6 @@ D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Debug\net8.0\runtimes\win\lib\ne
 D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Debug\net8.0\TaskManagerApi.sourcelink.json
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Debug\net8.0\FluentValidation.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Debug\net8.0\FluentValidation.AspNetCore.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Debug\net8.0\FluentValidation.DependencyInjectionExtensions.dll

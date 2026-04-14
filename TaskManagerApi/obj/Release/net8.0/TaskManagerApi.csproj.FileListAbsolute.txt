@@ -145,3 +145,6 @@ D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\AutoMapper.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\wwwroot\index.html
 D:\VSProjects\TaskManagerApi\TaskManagerApi\obj\Release\net8.0\TaskManagerApi.sourcelink.json
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\FluentValidation.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\FluentValidation.AspNetCore.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\FluentValidation.DependencyInjectionExtensions.dll
