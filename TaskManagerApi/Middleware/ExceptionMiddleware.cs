@@ -21,7 +21,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error catched");
+                var correlationId = context.Items["CorrelationId"]?.ToString();
+                Log.Error(ex, "[{CorrelationId}] Error catched", correlationId);
                 await HandleExceptionAsync(context, ex);
             }
         }

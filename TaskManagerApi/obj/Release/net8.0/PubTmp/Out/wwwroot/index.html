@@ -157,13 +157,13 @@
         // List TASKS
         async function getTasks() {
             const list = document.getElementById("taskList");
-            list.innerHTML = "Yükleniyor...";
+            list.innerHTML = "Loading...";
 
             try {
                 const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}&filter=${currentFilter}&search=${searchText}`);
 
                 if (!res.ok) {
-                    throw new Error("API hata verdi");
+                    throw new Error("API error");
                 }
 
                 const result = await res.json();
@@ -181,7 +181,7 @@
 
 
                 if (filteredTasks.length === 0) {
-                    list.innerHTML = "Sonuç bulunamadı";
+                    list.innerHTML = "Result not found";
                     return;
                 }
 
@@ -294,7 +294,7 @@
 
             } catch (err) {
                 console.error(err);
-                list.innerHTML = "Hata oluştu";
+                list.innerHTML = "Error occurred";
             }
         }
 
