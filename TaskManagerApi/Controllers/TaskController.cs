@@ -56,5 +56,13 @@ namespace TaskManagerApi.Controllers
             await _taskService.UpdateAsync(id, dto);
             return Ok();
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var task = await _taskService.GetByIdAsync(id);
+
+            return Ok(task);
+        }
     }
 }

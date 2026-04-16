@@ -1,5 +1,6 @@
 ﻿namespace TaskManagerApi.Middleware
 {
+    using Serilog;
     using System.Net;
     using System.Text.Json;
 
@@ -20,6 +21,7 @@
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "Error catched");
                 await HandleExceptionAsync(context, ex);
             }
         }

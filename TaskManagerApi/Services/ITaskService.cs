@@ -9,5 +9,6 @@ namespace TaskManagerApi.Services
         Task<TaskItem> AddAsync(CreateTaskDto dto);
         Task DeleteAsync(int id);
         Task UpdateAsync(int id, UpdateTaskDto dto);
+        Task<TaskItem> GetByIdAsync(int id);
     }
 }

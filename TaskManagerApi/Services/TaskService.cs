@@ -60,7 +60,7 @@ namespace TaskManagerApi.Services
             var item = await _repository.GetByIdAsync(id);
 
             if (item == null)
-                throw new KeyNotFoundException("Task bulunamadı");
+                throw new KeyNotFoundException("Task not found");
 
             await _repository.DeleteAsync(id);
         }
@@ -68,17 +68,27 @@ namespace TaskManagerApi.Services
         public async Task UpdateAsync(int id, UpdateTaskDto dto)
         {
             if (id != dto.Id)
-                throw new ArgumentException("Id uyuşmuyor");
+                throw new ArgumentException("Id not matching");
 
             var task = await _repository.GetByIdAsync(id);
 
             if (task == null)
-                throw new KeyNotFoundException("Task bulunamadı");
+                throw new KeyNotFoundException("Task not found");
 
             // mapping
             _mapper.Map(dto, task);
 
             await _repository.UpdateAsync(task);
+        }
+
+        public async Task<TaskItem> GetByIdAsync(int id)
+        {
+            var task = await _repository.GetByIdAsync(id);
+
+            if (task == null)
+                throw new KeyNotFoundException("Task not found");
+
+            return task;
         }
     }
 }
