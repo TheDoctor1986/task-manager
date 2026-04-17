@@ -5,11 +5,13 @@ using System.Linq;
 using TaskManagerApi.Dtos;
 using TaskManagerApi.Models;
 using TaskManagerApi.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskManagerApi.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [Authorize]
     public class TaskController : ControllerBase
     {
         private readonly ITaskService _taskService;

@@ -174,3 +174,4 @@ D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\System.IO.Pipelin
 D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\System.Text.Encodings.Web.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\System.Text.Json.dll
 D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
+D:\VSProjects\TaskManagerApi\TaskManagerApi\bin\Release\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
