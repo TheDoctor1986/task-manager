@@ -124,6 +124,13 @@
 <body>
 
     <div class="container">
+
+        <div id="loginBox" style="margin-bottom:15px;">
+            <input id="email" placeholder="Email" />
+            <input id="password" type="password" placeholder="Password" />
+            <button onclick="login()">Login</button>
+        </div>
+
         <h1>Task Manager</h1>
 
         <input type="text" id="taskInput" placeholder="Yeni görev yaz..." />
@@ -151,8 +158,21 @@
         const apiUrl = "https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Task";
 
         window.onload = function () {
-            getTasks();
+            const token = localStorage.getItem("token");
+
+            if (token) {
+                getTasks();
+            }
         };
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem("token");
+
+            return {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            };
+        }
 
         // List TASKS
         async function getTasks() {
@@ -160,7 +180,9 @@
             list.innerHTML = "Loading...";
 
             try {
-                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}&filter=${currentFilter}&search=${searchText}`);
+                const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}&filter=${currentFilter}&search=${searchText}`, {
+                    headers: getAuthHeaders()
+                });
 
                 if (!res.ok) {
                     throw new Error("API error");
@@ -309,9 +331,7 @@
 
             await fetch(apiUrl, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(task)
             });
 
@@ -390,6 +410,27 @@
                 currentPage = 1;
                 getTasks();
             }, 200);
+        }
+
+        async function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const res = await fetch("https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            localStorage.setItem("token", data.token);
+
+            alert("Login Successful");
+
+            getTasks();
         }
 
         setFilter("all");

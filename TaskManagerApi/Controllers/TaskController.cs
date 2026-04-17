@@ -6,6 +6,7 @@ using TaskManagerApi.Dtos;
 using TaskManagerApi.Models;
 using TaskManagerApi.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace TaskManagerApi.Controllers
 {
@@ -26,7 +27,9 @@ namespace TaskManagerApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(int page = 1, int pageSize = 5, string filter = "all", string search = "")
         {
-            var (data, totalCount) = await _taskService.GetAllAsync(page, pageSize, filter, search);
+            var userId = GetUserId();
+
+            var (data, totalCount) = await _taskService.GetAllAsync(userId, page, pageSize, filter, search);
 
             return Ok(new
             {
@@ -41,7 +44,10 @@ namespace TaskManagerApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(CreateTaskDto dto)
         {
-            var result = await _taskService.AddAsync(dto);
+            var userId = GetUserId();
+
+            var result = await _taskService.AddAsync(dto, userId);
+
             return Ok(result);
         }
 
@@ -65,6 +71,12 @@ namespace TaskManagerApi.Controllers
             var task = await _taskService.GetByIdAsync(id);
 
             return Ok(task);
+        }
+
+        private int GetUserId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.Parse(userId);
         }
     }
 }

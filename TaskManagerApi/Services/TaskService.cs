@@ -17,9 +17,12 @@ namespace TaskManagerApi.Services
             _mapper = mapper;
         }
 
-        public async Task<(List<TaskDto> Data, int TotalCount)> GetAllAsync(int page, int pageSize, string filter, string search)
+        public async Task<(List<TaskDto> Data, int TotalCount)> GetAllAsync(int userId, int page, int pageSize, string filter, string search)
         {
-            var query = _repository.Query(); 
+            var query = _repository.Query();
+
+            // 👇 EN KRİTİK SATIR
+            query = query.Where(t => t.UserId == userId);
 
             // SEARCH
             if (!string.IsNullOrEmpty(search))
@@ -47,10 +50,12 @@ namespace TaskManagerApi.Services
             return (result, totalCount);
         }
 
-        public async Task<TaskItem> AddAsync(CreateTaskDto dto)
+        public async Task<TaskItem> AddAsync(CreateTaskDto dto, int userId)
         {
             var task = _mapper.Map<TaskItem>(dto);
+
             task.IsDone = false;
+            task.UserId = userId;
 
             return await _repository.AddAsync(task);
         }
