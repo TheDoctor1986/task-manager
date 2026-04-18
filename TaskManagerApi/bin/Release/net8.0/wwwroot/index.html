@@ -158,7 +158,12 @@
         const apiUrl = "https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Task";
 
         window.onload = function () {
-            getTasks();
+            const token = localStorage.getItem("token");
+
+            if (token) {
+                document.getElementById("loginBox").style.display = "none"; 
+                getTasks();
+            }
         };
 
         function getAuthHeaders() {
@@ -172,6 +177,13 @@
 
         // List TASKS
         async function getTasks() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                document.getElementById("loginBox").style.display = "block";
+                return;
+            }
+            document.getElementById("loginBox").style.display = "none";
+
             const list = document.getElementById("taskList");
             list.innerHTML = "Loading...";
 
@@ -268,9 +280,7 @@
 
                         await fetch(`${apiUrl}/${task.id}`, {
                             method: "PUT",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify({
                                 id: task.id,
                                 title: newTitle,
@@ -278,7 +288,7 @@
                             })
                         });
 
-                        getTasks(); //Refresh Tasks
+                        getTasks();
                     });
 
                     cancelBtn.addEventListener("click", () => {
@@ -338,7 +348,8 @@
         // DELETE TASK
         async function deleteTask(id) {
             await fetch(`${apiUrl}/${id}`, {
-                method: "DELETE"
+                method: "DELETE",
+                headers: getAuthHeaders()
             });
 
             getTasks();
@@ -348,9 +359,7 @@
 
             await fetch(`${apiUrl}/${task.id}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                     id: task.id,
                     title: task.title,
@@ -389,7 +398,6 @@
             getTasks();
         }
 
-        document.addEventListener("DOMContentLoaded", getTasks);
         document.getElementById("searchInput").addEventListener("input", (e) => {
             searchText = e.target.value.toLowerCase();
             getTasks();
@@ -424,12 +432,22 @@
 
             localStorage.setItem("token", data.token);
 
-            alert("Login Successful");
+            document.getElementById("loginBox").style.display = "none";
 
             getTasks();
         }
 
-        setFilter("all");
+        document.addEventListener("DOMContentLoaded", function () {
+            const token = localStorage.getItem("token");
+
+            if (token) {
+                document.getElementById("loginBox").style.display = "none";
+                getTasks();
+            }
+        });
+
+        /* setFilter("all");*/
+        document.getElementById("filter-all").classList.add("active");
 
     </script>
 
