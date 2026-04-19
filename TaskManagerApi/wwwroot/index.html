@@ -18,6 +18,7 @@
             width: 100%;
             margin: auto;
             box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            position: relative;
         }
 
         h1 {
@@ -118,6 +119,17 @@
             background: #007bff;
             color: white;
         }
+
+        #logoutBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff4d4f;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
     </style>
 </head>
 
@@ -130,6 +142,10 @@
             <input id="password" type="password" placeholder="Password" />
             <button onclick="login()">Login</button>
         </div>
+
+        <button id="logoutBtn" onclick="logout()" style="display:none; margin-bottom:10px;">
+            Logout
+        </button>
 
         <h1>Task Manager</h1>
 
@@ -158,12 +174,7 @@
         const apiUrl = "https://taskmanagerapi9876-eegsdqejajdxfch3.westeurope-01.azurewebsites.net/api/v1/Task";
 
         window.onload = function () {
-            const token = localStorage.getItem("token");
-
-            if (token) {
-                document.getElementById("loginBox").style.display = "none"; 
-                getTasks();
-            }
+            getTasks();
         };
 
         function getAuthHeaders() {
@@ -178,11 +189,17 @@
         // List TASKS
         async function getTasks() {
             const token = localStorage.getItem("token");
+
+            const loginBox = document.getElementById("loginBox");
+            const logoutBtn = document.getElementById("logoutBtn");
+
             if (!token) {
-                document.getElementById("loginBox").style.display = "block";
+                loginBox.style.display = "block";
+                logoutBtn.style.display = "none";
                 return;
             }
-            document.getElementById("loginBox").style.display = "none";
+            loginBox.style.display = "none";
+            logoutBtn.style.display = "block";
 
             const list = document.getElementById("taskList");
             list.innerHTML = "Loading...";
@@ -435,6 +452,11 @@
             document.getElementById("loginBox").style.display = "none";
 
             getTasks();
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            location.reload();
         }
 
         document.addEventListener("DOMContentLoaded", function () {
