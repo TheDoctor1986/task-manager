@@ -193,11 +193,14 @@
             const loginBox = document.getElementById("loginBox");
             const logoutBtn = document.getElementById("logoutBtn");
 
+            // Token yoksa, loginBox'u göster ve logout'u gizle
             if (!token) {
                 loginBox.style.display = "block";
                 logoutBtn.style.display = "none";
+                document.getElementById("taskList").innerHTML = "Please log in to view tasks.";
                 return;
             }
+
             loginBox.style.display = "none";
             logoutBtn.style.display = "block";
 
@@ -208,6 +211,12 @@
                 const res = await fetch(`${apiUrl}?page=${currentPage}&pageSize=${pageSize}&filter=${currentFilter}&search=${searchText}`, {
                     headers: getAuthHeaders()
                 });
+
+                // 401 hatasında logout yap
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
 
                 if (!res.ok) {
                     throw new Error("API error");
@@ -226,7 +235,6 @@
                     filteredTasks = filteredTasks.filter(t => t.isDone);
                 }
 
-
                 if (filteredTasks.length === 0) {
                     list.innerHTML = "Result not found";
                     return;
@@ -236,42 +244,18 @@
                     const li = document.createElement("li");
 
                     li.innerHTML = `
-                            <div style="display:flex; align-items:center; gap:10px; width:100%;">
-
-                                <input type="checkbox"
-                                            ${task.isDone ? "checked" : ""}
-                                            style="flex:0 0 auto; width:16px; height:16px;" />
-
-
-                                <span class="task-text" style="
-                                                ${task.isDone ? 'text-decoration: line-through;' : ''}
-                                                flex: 1 1 auto;
-                                                min-width: 0;
-                                                display: block;
-                                                text-align: left;
-                                                white-space: normal;
-                                                overflow-wrap: break-word;
-                                                word-break: normal;
-                                            ">
-                                    ${task.title}
-                                </span>
-
-                                <input class="edit-input" type="text" value="${task.title}"
-                                               style="
-                                                   display:none;
-                                                   flex:1 1 auto;
-                                                   min-width:0;
-                                               " />
-                                <div class="action-buttons">
-                                    <button class="edit-btn">✏️</button>
-                                    <button class="delete-btn">🗑️</button>
-
-                                    <button class="save-btn">💾</button>
-                                    <button class="cancel-btn">❌</button>
-                                </div>
-
-                            </div>
-                            `;
+                <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                    <input type="checkbox" ${task.isDone ? "checked" : ""} style="flex:0 0 auto; width:16px; height:16px;" />
+                    <span class="task-text" style="${task.isDone ? 'text-decoration: line-through;' : ''} flex: 1 1 auto; min-width: 0; display: block; text-align: left; white-space: normal; overflow-wrap: break-word; word-break: normal;">${task.title}</span>
+                    <input class="edit-input" type="text" value="${task.title}" style="display:none; flex:1 1 auto; min-width:0;" />
+                    <div class="action-buttons">
+                        <button class="edit-btn">✏️</button>
+                        <button class="delete-btn">🗑️</button>
+                        <button class="save-btn">💾</button>
+                        <button class="cancel-btn">❌</button>
+                    </div>
+                </div>
+            `;
                     const textSpan = li.querySelector(".task-text");
                     const editInput = li.querySelector(".edit-input");
 
@@ -282,11 +266,9 @@
                     editBtn.addEventListener("click", () => {
                         textSpan.style.display = "none";
                         editInput.style.display = "block";
-
                         editBtn.style.display = "none";
                         saveBtn.style.display = "inline-block";
                         cancelBtn.style.display = "inline-block";
-
                         editInput.focus();
                     });
 
@@ -310,10 +292,8 @@
 
                     cancelBtn.addEventListener("click", () => {
                         editInput.value = task.title;
-
                         textSpan.style.display = "block";
                         editInput.style.display = "none";
-
                         editBtn.style.display = "inline-block";
                         saveBtn.style.display = "none";
                         cancelBtn.style.display = "none";
