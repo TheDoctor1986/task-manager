@@ -1,12 +1,8 @@
-using AutoMapper;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using TaskManagerApi.Dtos;
-using TaskManagerApi.Models;
-using TaskManagerApi.Services;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using TaskManagerApi.Dtos;
+using TaskManagerApi.Services;
 
 namespace TaskManagerApi.Controllers
 {
@@ -21,8 +17,6 @@ namespace TaskManagerApi.Controllers
         {
             _taskService = taskService;
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> Get(int page = 1, int pageSize = 5, string filter = "all", string search = "")
@@ -40,7 +34,6 @@ namespace TaskManagerApi.Controllers
             });
         }
 
-
         [HttpPost]
         public async Task<IActionResult> Post(CreateTaskDto dto)
         {
@@ -54,21 +47,29 @@ namespace TaskManagerApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _taskService.DeleteAsync(id);
+            var userId = GetUserId();
+
+            await _taskService.DeleteAsync(id, userId);
+
             return Ok();
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
         {
-            await _taskService.UpdateAsync(id, dto);
+            var userId = GetUserId();
+
+            await _taskService.UpdateAsync(id, dto, userId);
+
             return Ok();
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var task = await _taskService.GetByIdAsync(id);
+            var userId = GetUserId();
+
+            var task = await _taskService.GetByIdAsync(id, userId);
 
             return Ok(task);
         }

@@ -7,8 +7,9 @@ namespace TaskManagerApi.Services
     {
         Task<(List<TaskDto> Data, int TotalCount)> GetAllAsync(int userId, int page, int pageSize, string filter, string search);
         Task<TaskItem> AddAsync(CreateTaskDto dto, int userId);
-        Task DeleteAsync(int id);
-        Task UpdateAsync(int id, UpdateTaskDto dto);
-        Task<TaskItem> GetByIdAsync(int id);
+        Task DeleteAsync(int id, int userId);
+        Task UpdateAsync(int id, UpdateTaskDto dto, int userId);
+        Task<TaskItem> GetByIdAsync(int id, int userId);
     }
 }
+

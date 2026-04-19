@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -50,7 +50,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Bearer {token} şeklinde gir"
+        Description = "Bearer {token} ÅŸeklinde gir"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -101,14 +101,14 @@ app.Use(async (context, next) =>
 {
     var correlationId = context.Items["CorrelationId"]?.ToString();
 
-    Log.Information("[{CorrelationId}] ➡️ {Method} {Path}",
+    Log.Information("[{CorrelationId}] â¡ï¸ {Method} {Path}",
         correlationId,
         context.Request.Method,
         context.Request.Path);
 
     await next();
 
-    Log.Information("[{CorrelationId}] ⬅️ {StatusCode}",
+    Log.Information("[{CorrelationId}] â¬…ï¸ {StatusCode}",
         correlationId,
         context.Response.StatusCode);
 });
@@ -134,3 +134,6 @@ app.UseStaticFiles();
 //app.MapFallbackToFile("index.html");
 
 app.Run();
+
+public partial class Program { }
+

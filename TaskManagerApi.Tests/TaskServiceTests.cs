@@ -118,9 +118,18 @@ public class TaskServiceTests
     [Fact]
     public async Task DeleteAsync_WhenTaskDoesNotExist_ThrowsKeyNotFoundException()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(404)).ReturnsAsync((TaskItem?)null);
+        SetupQueryableTasks();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(404));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(404, 42));
+        _repoMock.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WhenTaskBelongsToAnotherUser_ThrowsKeyNotFoundException()
+    {
+        SetupQueryableTasks(new TaskItem { Id = 1, UserId = 99, Title = "Other", IsDone = false });
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(1, 42));
         _repoMock.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
     }
 
@@ -129,16 +138,34 @@ public class TaskServiceTests
     {
         var dto = new UpdateTaskDto { Id = 2, Title = "Mismatch", IsDone = true };
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _service.UpdateAsync(1, dto));
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.UpdateAsync(1, dto, 42));
+        _repoMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenTaskBelongsToAnotherUser_ThrowsKeyNotFoundException()
+    {
+        var dto = new UpdateTaskDto { Id = 1, Title = "Updated", IsDone = true };
+        SetupQueryableTasks(new TaskItem { Id = 1, UserId = 99, Title = "Other", IsDone = false });
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.UpdateAsync(1, dto, 42));
         _repoMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Never);
     }
 
     [Fact]
     public async Task GetByIdAsync_WhenTaskDoesNotExist_ThrowsKeyNotFoundException()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(404)).ReturnsAsync((TaskItem?)null);
+        SetupQueryableTasks();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetByIdAsync(404));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetByIdAsync(404, 42));
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenTaskBelongsToAnotherUser_ThrowsKeyNotFoundException()
+    {
+        SetupQueryableTasks(new TaskItem { Id = 1, UserId = 99, Title = "Other", IsDone = false });
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetByIdAsync(1, 42));
     }
 
     private async Task SeedTasksAsync(params TaskItem[] tasks)
@@ -149,6 +176,15 @@ public class TaskServiceTests
 
         _repoMock.Setup(r => r.Query()).Returns(context.Tasks);
         SetupTaskListMapping();
+    }
+
+    private void SetupQueryableTasks(params TaskItem[] tasks)
+    {
+        var context = new AppDbContext(_dbOptions);
+        context.Tasks.AddRange(tasks);
+        context.SaveChanges();
+
+        _repoMock.Setup(r => r.Query()).Returns(context.Tasks);
     }
 
     private void SetupTaskListMapping()

@@ -55,35 +55,36 @@ public class TaskControllerTests
     }
 
     [Fact]
-    public async Task Delete_CallsServiceAndReturnsOk()
+    public async Task Delete_PassesAuthenticatedUserIdToServiceAndReturnsOk()
     {
         var result = await _controller.Delete(10);
 
         Assert.IsType<OkResult>(result);
-        _serviceMock.Verify(s => s.DeleteAsync(10), Times.Once);
+        _serviceMock.Verify(s => s.DeleteAsync(10, 42), Times.Once);
     }
 
     [Fact]
-    public async Task Update_CallsServiceAndReturnsOk()
+    public async Task Update_PassesAuthenticatedUserIdToServiceAndReturnsOk()
     {
         var dto = new UpdateTaskDto { Id = 10, Title = "Updated", IsDone = true };
 
         var result = await _controller.Update(10, dto);
 
         Assert.IsType<OkResult>(result);
-        _serviceMock.Verify(s => s.UpdateAsync(10, dto), Times.Once);
+        _serviceMock.Verify(s => s.UpdateAsync(10, dto, 42), Times.Once);
     }
 
     [Fact]
-    public async Task GetById_ReturnsTaskFromService()
+    public async Task GetById_PassesAuthenticatedUserIdToServiceAndReturnsTask()
     {
         var task = new TaskItem { Id = 10, UserId = 42, Title = "Task", IsDone = false };
-        _serviceMock.Setup(s => s.GetByIdAsync(10)).ReturnsAsync(task);
+        _serviceMock.Setup(s => s.GetByIdAsync(10, 42)).ReturnsAsync(task);
 
         var result = await _controller.GetById(10);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.Same(task, okResult.Value);
+        _serviceMock.Verify(s => s.GetByIdAsync(10, 42), Times.Once);
     }
 
     private void SetAuthenticatedUser(int userId)

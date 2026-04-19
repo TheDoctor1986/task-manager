@@ -21,17 +21,14 @@ namespace TaskManagerApi.Services
         {
             var query = _repository.Query();
 
-            // 👇 EN KRİTİK SATIR
             query = query.Where(t => t.UserId == userId);
 
-            // SEARCH
             if (!string.IsNullOrEmpty(search))
             {
                 var lowerSearch = search.ToLower();
                 query = query.Where(t => t.Title.ToLower().Contains(lowerSearch));
             }
 
-            // FILTER
             if (filter == "active")
                 query = query.Where(t => !t.IsDone);
             else if (filter == "completed")
@@ -60,9 +57,10 @@ namespace TaskManagerApi.Services
             return await _repository.AddAsync(task);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, int userId)
         {
-            var item = await _repository.GetByIdAsync(id);
+            var item = await _repository.Query()
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (item == null)
                 throw new KeyNotFoundException("Task not found");
@@ -70,25 +68,26 @@ namespace TaskManagerApi.Services
             await _repository.DeleteAsync(id);
         }
 
-        public async Task UpdateAsync(int id, UpdateTaskDto dto)
+        public async Task UpdateAsync(int id, UpdateTaskDto dto, int userId)
         {
             if (id != dto.Id)
                 throw new ArgumentException("Id not matching");
 
-            var task = await _repository.GetByIdAsync(id);
+            var task = await _repository.Query()
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (task == null)
                 throw new KeyNotFoundException("Task not found");
 
-            // mapping
             _mapper.Map(dto, task);
 
             await _repository.UpdateAsync(task);
         }
 
-        public async Task<TaskItem> GetByIdAsync(int id)
+        public async Task<TaskItem> GetByIdAsync(int id, int userId)
         {
-            var task = await _repository.GetByIdAsync(id);
+            var task = await _repository.Query()
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (task == null)
                 throw new KeyNotFoundException("Task not found");
