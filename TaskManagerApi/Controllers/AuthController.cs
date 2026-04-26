@@ -24,6 +24,11 @@ namespace TaskManagerApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
+            var emailExists = await _context.Users.AnyAsync(x => x.Email == dto.Email);
+
+            if (emailExists)
+                return Conflict("Email already exists");
+
             var user = new User
             {
                 Email = dto.Email,
@@ -59,7 +64,7 @@ namespace TaskManagerApi.Controllers
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), 
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
