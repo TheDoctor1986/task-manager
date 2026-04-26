@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using TaskManagerApi.Dtos;
@@ -17,6 +18,11 @@ public class TaskOwnershipIntegrationTests : IDisposable
 
     public TaskOwnershipIntegrationTests()
     {
+        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", "Server=(localdb)\\MSSQLLocalDB;Database=TaskManagerApiTests;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        Environment.SetEnvironmentVariable("Jwt__Issuer", "taskmanager-api");
+        Environment.SetEnvironmentVariable("Jwt__Audience", "taskmanager-client");
+        Environment.SetEnvironmentVariable("Jwt__Key", "test_only_jwt_key_for_integration_tests_12345");
+
         _factory = new CustomWebApplicationFactory();
         _client = _factory.CreateClient();
     }
