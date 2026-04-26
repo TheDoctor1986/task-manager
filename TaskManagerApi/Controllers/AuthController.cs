@@ -25,7 +25,15 @@ namespace TaskManagerApi.Controllers
             _jwtSettings = jwtSettings.Value;
         }
 
+        /// <summary>
+        /// Registers a new user account.
+        /// </summary>
+        /// <param name="dto">Registration payload containing email and password.</param>
+        /// <returns>Returns <c>200 OK</c> when registration succeeds.</returns>
         [HttpPost("register")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
             var emailExists = await _context.Users.AnyAsync(x => x.Email == dto.Email);
@@ -45,7 +53,15 @@ namespace TaskManagerApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Authenticates a user and returns a JWT access token.
+        /// </summary>
+        /// <param name="dto">Login payload containing email and password.</param>
+        /// <returns>A JWT token when credentials are valid.</returns>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             var user = await _context.Users

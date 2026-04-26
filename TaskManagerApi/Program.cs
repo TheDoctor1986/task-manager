@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using TaskManagerApi.Options;
+using System.Reflection;
 
 
 Log.Logger = new LoggerConfiguration()
@@ -58,7 +59,8 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "TaskManager API",
-        Version = "v1"
+        Version = "v1",
+        Description = "Task management API with JWT authentication and user-scoped task access."
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -85,6 +87,11 @@ builder.Services.AddSwaggerGen(options =>
             new string[] {}
         }
     });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
 });
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
@@ -134,12 +141,15 @@ app.Use(async (context, next) =>
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseSerilogRequestLogging();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
-    c.RoutePrefix = "swagger";
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
