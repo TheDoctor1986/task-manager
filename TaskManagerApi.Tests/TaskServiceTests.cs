@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using TaskManagerApi.Dtos;
 using TaskManagerApi.Models;
@@ -9,17 +8,12 @@ using Xunit;
 
 public class TaskServiceTests
 {
-    private readonly DbContextOptions<AppDbContext> _dbOptions;
     private readonly Mock<ITaskRepository> _repoMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly TaskService _service;
 
     public TaskServiceTests()
     {
-        _dbOptions = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-
         _repoMock = new Mock<ITaskRepository>();
         _mapperMock = new Mock<IMapper>();
         _service = new TaskService(_repoMock.Object, _mapperMock.Object);
@@ -28,10 +22,12 @@ public class TaskServiceTests
     [Fact]
     public async Task GetAllAsync_ReturnsDataForUser()
     {
-        await SeedTasksAsync(
+        var tasks = new List<TaskItem>
+        {
             new TaskItem { Id = 1, UserId = 42, Title = "Task 1", IsDone = false },
-            new TaskItem { Id = 2, UserId = 42, Title = "Task 2", IsDone = true },
-            new TaskItem { Id = 3, UserId = 99, Title = "Other user task", IsDone = false });
+            new TaskItem { Id = 2, UserId = 42, Title = "Task 2", IsDone = true }
+        };
+        SetupPagedTasks(tasks, 2);
 
         var (data, totalCount) = await _service.GetAllAsync(42, 1, 10, "all", "");
 
@@ -43,9 +39,11 @@ public class TaskServiceTests
     [Fact]
     public async Task GetAllAsync_WhenFilterIsActive_ReturnsOnlyIncompleteTasks()
     {
-        await SeedTasksAsync(
-            new TaskItem { Id = 1, UserId = 42, Title = "Open", IsDone = false },
-            new TaskItem { Id = 2, UserId = 42, Title = "Done", IsDone = true });
+        var tasks = new List<TaskItem>
+        {
+            new TaskItem { Id = 1, UserId = 42, Title = "Open", IsDone = false }
+        };
+        SetupPagedTasks(tasks, 1);
 
         var (data, totalCount) = await _service.GetAllAsync(42, 1, 10, "active", "");
 
@@ -57,9 +55,11 @@ public class TaskServiceTests
     [Fact]
     public async Task GetAllAsync_WhenFilterIsCompleted_ReturnsOnlyCompletedTasks()
     {
-        await SeedTasksAsync(
-            new TaskItem { Id = 1, UserId = 42, Title = "Open", IsDone = false },
-            new TaskItem { Id = 2, UserId = 42, Title = "Done", IsDone = true });
+        var tasks = new List<TaskItem>
+        {
+            new TaskItem { Id = 2, UserId = 42, Title = "Done", IsDone = true }
+        };
+        SetupPagedTasks(tasks, 1);
 
         var (data, totalCount) = await _service.GetAllAsync(42, 1, 10, "completed", "");
 
@@ -71,10 +71,13 @@ public class TaskServiceTests
     [Fact]
     public async Task GetAllAsync_WhenSearchProvided_FiltersByTitleCaseInsensitively()
     {
-        await SeedTasksAsync(
+        var tasks = new List<TaskItem>
+        {
             new TaskItem { Id = 1, UserId = 42, Title = "Buy Milk", IsDone = false },
             new TaskItem { Id = 2, UserId = 42, Title = "Write Tests", IsDone = false },
-            new TaskItem { Id = 3, UserId = 99, Title = "Buy Milk", IsDone = false });
+            new TaskItem { Id = 3, UserId = 99, Title = "Buy Milk", IsDone = false }
+        };
+        SetupPagedTasks(tasks.Where(t => t.UserId == 42 && t.Title == "Buy Milk").ToList(), 1);
 
         var (data, totalCount) = await _service.GetAllAsync(42, 1, 10, "all", "milk");
 
@@ -87,10 +90,13 @@ public class TaskServiceTests
     [Fact]
     public async Task GetAllAsync_AppliesPagingAfterCountingMatches()
     {
-        await SeedTasksAsync(
+        var tasks = new List<TaskItem>
+        {
             new TaskItem { Id = 1, UserId = 42, Title = "Task 1", IsDone = false },
             new TaskItem { Id = 2, UserId = 42, Title = "Task 2", IsDone = false },
-            new TaskItem { Id = 3, UserId = 42, Title = "Task 3", IsDone = false });
+            new TaskItem { Id = 3, UserId = 42, Title = "Task 3", IsDone = false }
+        };
+        SetupPagedTasks(new List<TaskItem> { tasks[1] }, 3);
 
         var (data, totalCount) = await _service.GetAllAsync(42, 2, 1, "all", "");
 
@@ -118,7 +124,7 @@ public class TaskServiceTests
     [Fact]
     public async Task DeleteAsync_WhenTaskDoesNotExist_ThrowsKeyNotFoundException()
     {
-        SetupQueryableTasks();
+        _repoMock.Setup(r => r.GetByIdForUserAsync(404, 42)).ReturnsAsync((TaskItem?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(404, 42));
         _repoMock.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
@@ -127,7 +133,7 @@ public class TaskServiceTests
     [Fact]
     public async Task DeleteAsync_WhenTaskBelongsToAnotherUser_ThrowsKeyNotFoundException()
     {
-        SetupQueryableTasks(new TaskItem { Id = 1, UserId = 99, Title = "Other", IsDone = false });
+        _repoMock.Setup(r => r.GetByIdForUserAsync(1, 42)).ReturnsAsync((TaskItem?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(1, 42));
         _repoMock.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
@@ -146,7 +152,7 @@ public class TaskServiceTests
     public async Task UpdateAsync_WhenTaskBelongsToAnotherUser_ThrowsKeyNotFoundException()
     {
         var dto = new UpdateTaskDto { Id = 1, Title = "Updated", IsDone = true };
-        SetupQueryableTasks(new TaskItem { Id = 1, UserId = 99, Title = "Other", IsDone = false });
+        _repoMock.Setup(r => r.GetByIdForUserAsync(1, 42)).ReturnsAsync((TaskItem?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.UpdateAsync(1, dto, 42));
         _repoMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Never);
@@ -155,7 +161,7 @@ public class TaskServiceTests
     [Fact]
     public async Task GetByIdAsync_WhenTaskDoesNotExist_ThrowsKeyNotFoundException()
     {
-        SetupQueryableTasks();
+        _repoMock.Setup(r => r.GetByIdForUserAsync(404, 42)).ReturnsAsync((TaskItem?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetByIdAsync(404, 42));
     }
@@ -163,28 +169,22 @@ public class TaskServiceTests
     [Fact]
     public async Task GetByIdAsync_WhenTaskBelongsToAnotherUser_ThrowsKeyNotFoundException()
     {
-        SetupQueryableTasks(new TaskItem { Id = 1, UserId = 99, Title = "Other", IsDone = false });
+        _repoMock.Setup(r => r.GetByIdForUserAsync(1, 42)).ReturnsAsync((TaskItem?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetByIdAsync(1, 42));
     }
 
-    private async Task SeedTasksAsync(params TaskItem[] tasks)
+    private void SetupPagedTasks(List<TaskItem> tasks, int totalCount)
     {
-        var context = new AppDbContext(_dbOptions);
-        context.Tasks.AddRange(tasks);
-        await context.SaveChangesAsync();
-
-        _repoMock.Setup(r => r.Query()).Returns(context.Tasks);
+        _repoMock
+            .Setup(r => r.GetPagedForUserAsync(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ReturnsAsync((tasks, totalCount));
         SetupTaskListMapping();
-    }
-
-    private void SetupQueryableTasks(params TaskItem[] tasks)
-    {
-        var context = new AppDbContext(_dbOptions);
-        context.Tasks.AddRange(tasks);
-        context.SaveChanges();
-
-        _repoMock.Setup(r => r.Query()).Returns(context.Tasks);
     }
 
     private void SetupTaskListMapping()
