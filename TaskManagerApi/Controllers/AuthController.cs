@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using TaskManagerApi.Dtos;
 using TaskManagerApi.Helpers;
@@ -54,18 +56,17 @@ namespace TaskManagerApi.Controllers
         }
 
         /// <summary>
-        /// Authenticates a user and returns a JWT access token.
+        /// Authenticates a user and returns a JWT access token and refresh token.
         /// </summary>
         /// <param name="dto">Login payload containing email and password.</param>
-        /// <returns>A JWT token when credentials are valid.</returns>
+        /// <returns>A token pair when credentials are valid.</returns>
         [HttpPost("login")]
         [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(LoginDto dto)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
 
             if (user == null)
                 return Unauthorized("User not found");
@@ -75,12 +76,78 @@ namespace TaskManagerApi.Controllers
             if (user.PasswordHash != hashedPassword)
                 return Unauthorized("Wrong password");
 
-            var token = CreateToken(user);
+            var tokenPair = CreateTokenPair(user);
+            SetRefreshToken(user, tokenPair.RefreshToken);
+            await _context.SaveChangesAsync();
 
-            return Ok(new { token });
+            return Ok(tokenPair);
         }
 
-        private string CreateToken(User user)
+        /// <summary>
+        /// Exchanges a valid refresh token for a new access token and refresh token.
+        /// </summary>
+        /// <param name="dto">Refresh token payload.</param>
+        /// <returns>A rotated token pair when the refresh token is valid.</returns>
+        [HttpPost("refresh")]
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Refresh(RefreshTokenRequestDto dto)
+        {
+            var refreshTokenHash = PasswordHelper.HashValue(dto.RefreshToken);
+
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.RefreshTokenHash == refreshTokenHash);
+
+            if (user == null || user.RefreshTokenExpiresAt == null || user.RefreshTokenExpiresAt <= DateTime.UtcNow)
+                return Unauthorized("Invalid or expired refresh token");
+
+            var tokenPair = CreateTokenPair(user);
+            SetRefreshToken(user, tokenPair.RefreshToken);
+            await _context.SaveChangesAsync();
+
+            return Ok(tokenPair);
+        }
+
+        /// <summary>
+        /// Revokes the currently authenticated user's refresh token.
+        /// </summary>
+        /// <returns>Returns <c>200 OK</c> when logout succeeds.</returns>
+        [Authorize]
+        [HttpPost("logout")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Logout()
+        {
+            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdValue, out var userId))
+                return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                return Unauthorized();
+
+            user.RefreshTokenHash = null;
+            user.RefreshTokenExpiresAt = null;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        private LoginResponseDto CreateTokenPair(User user)
+        {
+            var accessToken = CreateAccessToken(user);
+            var refreshToken = GenerateRefreshToken();
+
+            return new LoginResponseDto
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
+            };
+        }
+
+        private string CreateAccessToken(User user)
         {
             var claims = new List<Claim>
             {
@@ -95,11 +162,23 @@ namespace TaskManagerApi.Controllers
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenMinutes),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private void SetRefreshToken(User user, string refreshToken)
+        {
+            user.RefreshTokenHash = PasswordHelper.HashValue(refreshToken);
+            user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenDays);
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(32);
+            return Convert.ToBase64String(bytes);
         }
     }
 }

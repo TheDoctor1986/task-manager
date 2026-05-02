@@ -160,7 +160,7 @@ public class ValidationIntegrationTests : IDisposable
         response.EnsureSuccessStatusCode();
 
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var token = document.RootElement.GetProperty("token").GetString();
+        var token = document.RootElement.GetProperty("accessToken").GetString();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 

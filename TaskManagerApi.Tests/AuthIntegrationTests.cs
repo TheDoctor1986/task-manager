@@ -42,20 +42,10 @@ public class AuthIntegrationTests : IDisposable
     [Fact]
     public async Task Login_WhenCredentialsAreValid_ReturnsToken()
     {
-        await RegisterAsync("login@example.com", "Password123!");
+        var loginResponse = await LoginAsync("login@example.com", "Password123!");
 
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", new LoginDto
-        {
-            Email = "login@example.com",
-            Password = "Password123!"
-        });
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var token = document.RootElement.GetProperty("token").GetString();
-
-        Assert.False(string.IsNullOrWhiteSpace(token));
+        Assert.False(string.IsNullOrWhiteSpace(loginResponse.AccessToken));
+        Assert.False(string.IsNullOrWhiteSpace(loginResponse.RefreshToken));
     }
 
     [Fact]
@@ -117,6 +107,77 @@ public class AuthIntegrationTests : IDisposable
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Refresh_WhenRefreshTokenIsValid_ReturnsNewTokenPair()
+    {
+        var loginResponse = await LoginAsync("refresh@example.com", "Password123!");
+
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", new RefreshTokenRequestDto
+        {
+            RefreshToken = loginResponse.RefreshToken
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var refreshedTokens = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        Assert.NotNull(refreshedTokens);
+        Assert.False(string.IsNullOrWhiteSpace(refreshedTokens!.AccessToken));
+        Assert.False(string.IsNullOrWhiteSpace(refreshedTokens.RefreshToken));
+        Assert.NotEqual(loginResponse.RefreshToken, refreshedTokens.RefreshToken);
+    }
+
+    [Fact]
+    public async Task Refresh_WhenRefreshTokenIsReused_ReturnsUnauthorized()
+    {
+        var loginResponse = await LoginAsync("rotating@example.com", "Password123!");
+
+        var firstRefreshResponse = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", new RefreshTokenRequestDto
+        {
+            RefreshToken = loginResponse.RefreshToken
+        });
+
+        Assert.Equal(HttpStatusCode.OK, firstRefreshResponse.StatusCode);
+
+        var secondRefreshResponse = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", new RefreshTokenRequestDto
+        {
+            RefreshToken = loginResponse.RefreshToken
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, secondRefreshResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_WhenRefreshTokenIsExpired_ReturnsUnauthorized()
+    {
+        var loginResponse = await LoginAsync("expired-refresh@example.com", "Password123!");
+
+        await ExpireStoredRefreshTokenAsync("expired-refresh@example.com");
+
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", new RefreshTokenRequestDto
+        {
+            RefreshToken = loginResponse.RefreshToken
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_WhenCalled_RevokesRefreshToken()
+    {
+        var loginResponse = await LoginAsync("logout@example.com", "Password123!");
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+
+        var logoutResponse = await _client.PostAsync("/api/v1/Auth/logout", null);
+        Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
+
+        var refreshResponse = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", new RefreshTokenRequestDto
+        {
+            RefreshToken = loginResponse.RefreshToken
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, refreshResponse.StatusCode);
+    }
+
     public void Dispose()
     {
         _client.Dispose();
@@ -148,6 +209,12 @@ public class AuthIntegrationTests : IDisposable
 
     private async Task AuthenticateAsync(string email, string password)
     {
+        var loginResponse = await LoginAsync(email, password);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+    }
+
+    private async Task<LoginResponseDto> LoginAsync(string email, string password)
+    {
         await RegisterAsync(email, password);
 
         var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", new LoginDto
@@ -158,9 +225,19 @@ public class AuthIntegrationTests : IDisposable
 
         response.EnsureSuccessStatusCode();
 
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var token = document.RootElement.GetProperty("token").GetString();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        Assert.NotNull(loginResponse);
+
+        return loginResponse!;
+    }
+
+    private async Task ExpireStoredRefreshTokenAsync(string email)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await dbContext.Users.SingleAsync(u => u.Email == email);
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+        await dbContext.SaveChangesAsync();
     }
 
     private sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>

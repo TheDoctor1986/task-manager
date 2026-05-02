@@ -1,7 +1,6 @@
 namespace TaskManagerApi.Dtos
 {
-    public class LoginResponseDto
+    public class LoginResponseDto : TokenPairDto
     {
-        public string Token { get; set; } = string.Empty;
     }
 }
